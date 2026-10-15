@@ -19,7 +19,29 @@ def get_card(card):
     rank = ranks[card % 13]
     return rank, suit
 
+def get_card_value(card):
+    val = card% 13
+    if(val == 0):
+        return 11
+    elif(val > 9):
+        return 10
+    else:
+        return val +1
+def get_hand_value(hand):
+    total = 0
+    aces = 0
+    for card in hand:
+        total += get_card_value(card)
 
+        if card % 13 == 0:
+            aces += 1
+
+    while total > 21 and aces > 0:
+        total -= 10
+        aces -= 1
+    return total
+
+    
 # Test the shuffled deck
 print("Shuffled deck:")
 for card in deck:
