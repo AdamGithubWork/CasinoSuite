@@ -40,16 +40,57 @@ def get_hand_value(hand):
         total -= 10
         aces -= 1
     return total
+def hit(hand, deck):
+    hand.append(deck.pop())
+def player_turn(player_hand, deck):
+    while get_hand_value(player_hand) < 21:
+        choice = input("Hit or Stand? (h/s): ").lower()
 
+        if choice == "h":
+            hit(player_hand, deck)
+            print("Your hand:", [get_card(card) for card in player_hand])
+            print("Hand value:", get_hand_value(player_hand))
+
+        elif choice == "s":
+            break
+
+        else:
+            print("Invalid choice. Enter h or s.")
+def dealer_turn(dealer_hand, deck):
+    while get_hand_value(dealer_hand)<17:
+        dealer_hand.append(deck.pop())
+def determine_winner(player_hand, dealer_hand):
+    if get_hand_value(player_hand)>21:
+        return "dealer"
+    elif get_hand_value(dealer_hand)>21:
+        return "player"
+    elif get_hand_value(player_hand) > get_hand_value(dealer_hand):
+        return "player"
+    elif get_hand_value(player_hand) < get_hand_value(dealer_hand):
+        return "dealer"    
+    else:
+        return "push"
     
 # Test the shuffled deck
-print("Shuffled deck:")
-for card in deck:
-    rank, suit = get_card(card)
-    print(f"{rank} of {suit}")
-player_hand = []
-dealer_hand = []
-player_hand.append(deck.pop())
-dealer_hand.append(deck.pop())
-player_hand.append(deck.pop())
-dealer_hand.append(deck.pop())
+if __name__ == "__main__":
+    player_hand = []
+    dealer_hand = []
+    player_hand.append(deck.pop())
+    dealer_hand.append(deck.pop())
+    player_hand.append(deck.pop())
+    dealer_hand.append(deck.pop())
+    print("Player:", [get_card(card) for card in player_hand])
+    print("Player value:", get_hand_value(player_hand))
+
+    print("Dealer:", [get_card(card) for card in dealer_hand])
+    print("Dealer value:", get_hand_value(dealer_hand))
+
+    player_turn(player_hand, deck)
+
+    if get_hand_value(player_hand) <= 21:
+        dealer_turn(dealer_hand, deck)
+
+    print("\nFinal dealer hand:", [get_card(card) for card in dealer_hand])
+    print("Dealer value:", get_hand_value(dealer_hand))
+
+    print("Winner:", determine_winner(player_hand, dealer_hand))
