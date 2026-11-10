@@ -39,7 +39,10 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN and blackjack_button.collidepoint(event.pos) and gamestate == "menu":
             gamestate = "blackjack"
             blackjack_deck, player_hand, dealer_hand = start_blackjack_round()
-            round_over = False
+            round_over = (
+                get_hand_value(player_hand) == 21
+                or get_hand_value(dealer_hand) == 21
+            )
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and gamestate == "blackjack":
             gamestate = "menu"
         if event.type == pygame.MOUSEBUTTONDOWN and gamestate == "blackjack":
@@ -58,7 +61,10 @@ while running:
             elif round_over:
                 if play_again_button.collidepoint(event.pos):
                     blackjack_deck, player_hand, dealer_hand = start_blackjack_round()
-                    round_over = False
+                    round_over = (
+                        get_hand_value(player_hand) == 21
+                        or get_hand_value(dealer_hand) == 21
+                    )
     screen.fill((30, 30, 30))
     if gamestate == "menu":
         screen.blit(title, title.get_rect(center=(500, 350)))
