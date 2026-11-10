@@ -1,4 +1,3 @@
-
 import pygame
 import random
 from deck import get_card, get_hand_value, hit, dealer_turn, determine_winner, is_blackjack
@@ -20,12 +19,23 @@ blackjack_button = pygame.Rect(400, 450, 200, 60)
 hit_button = pygame.Rect(350, 600, 120, 50)
 stand_button = pygame.Rect(530, 600, 120, 50)
 play_again_button = pygame.Rect(400, 400, 200, 50)
+reset_button = pygame.Rect(400, 470, 200, 60)
+
+bet_buttons = [
+    (10, pygame.Rect(250, 350, 140, 60)),
+    (50, pygame.Rect(430, 350, 140, 60)),
+    (100, pygame.Rect(610, 350, 140, 60))
+]
 
 gamestate = "menu"
 blackjack_deck = []
 player_hand = []
 dealer_hand = []
 round_over = False
+
+balance = 1000
+current_bet = 0
+payout_message = ""
 
 
 def start_blackjack_round():
@@ -42,35 +52,69 @@ def start_blackjack_round():
     return deck, player, dealer
 
 
+def finish_blackjack_round():
+    global round_over, balance, payout_message
+
+    if round_over:
+        return
+
+    round_over = True
+    winner = determine_winner(player_hand, dealer_hand)
+
+    if winner == "player":
+        if is_blackjack(player_hand):
+            winnings = current_bet * 3 // 2
+        else:
+            winnings = current_bet
+
+        balance += current_bet + winnings
+        payout_message = f"You won {winnings} chips!"
+
+    elif winner == "push":
+        balance += current_bet
+        payout_message = "Push! Bet returned."
+
+    else:
+        payout_message = f"You lost {current_bet} chips."
+
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE and gamestate == "blackjack":
+            if event.key == pygame.K_ESCAPE and gamestate != "menu":
                 gamestate = "menu"
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if gamestate == "menu":
                 if blackjack_button.collidepoint(event.pos):
-                    gamestate = "blackjack"
-                    blackjack_deck, player_hand, dealer_hand = start_blackjack_round()
+                    gamestate = "betting"
 
-                    round_over = (
-                        is_blackjack(player_hand)
-                        or is_blackjack(dealer_hand)
-                    )
+            elif gamestate == "betting":
+                if balance < 10 and reset_button.collidepoint(event.pos):
+                    balance = 1000
+
+                for amount, button in bet_buttons:
+                    if button.collidepoint(event.pos) and balance >= amount:
+                        current_bet = amount
+                        balance -= current_bet
+                        payout_message = ""
+
+                        blackjack_deck, player_hand, dealer_hand = start_blackjack_round()
+                        round_over = False
+                        gamestate = "blackjack"
+
+                        if is_blackjack(player_hand) or is_blackjack(dealer_hand):
+                            finish_blackjack_round()
+
+                        break
 
             elif gamestate == "blackjack":
                 if round_over:
                     if play_again_button.collidepoint(event.pos):
-                        blackjack_deck, player_hand, dealer_hand = start_blackjack_round()
-
-                        round_over = (
-                            is_blackjack(player_hand)
-                            or is_blackjack(dealer_hand)
-                        )
+                        gamestate = "betting"
 
                 else:
                     end_turn = False
@@ -88,7 +132,7 @@ while running:
                         if get_hand_value(player_hand) <= 21:
                             dealer_turn(dealer_hand, blackjack_deck)
 
-                        round_over = True
+                        finish_blackjack_round()
 
     screen.fill((30, 30, 30))
 
@@ -101,7 +145,83 @@ while running:
             blackjack_text.get_rect(center=blackjack_button.center)
         )
 
+    elif gamestate == "betting":
+        betting_title = font.render(
+            "Place Your Bet",
+            True,
+            (255, 255, 255)
+        )
+        screen.blit(
+            betting_title,
+            betting_title.get_rect(center=(500, 220))
+        )
+
+        chips_text = card_font.render(
+            f"Available Chips: {balance}",
+            True,
+            (255, 215, 0)
+        )
+        screen.blit(
+            chips_text,
+            chips_text.get_rect(center=(500, 290))
+        )
+
+        for amount, button in bet_buttons:
+            if balance >= amount:
+                button_color = (40, 120, 80)
+            else:
+                button_color = (80, 80, 80)
+
+            pygame.draw.rect(screen, button_color, button)
+
+            bet_text = card_font.render(
+                f"{amount} Chips",
+                True,
+                (255, 255, 255)
+            )
+            screen.blit(
+                bet_text,
+                bet_text.get_rect(center=button.center)
+            )
+
+        if balance < 10:
+            out_of_chips = card_font.render(
+                "You're out of chips!",
+                True,
+                (255, 100, 100)
+            )
+            screen.blit(
+                out_of_chips,
+                out_of_chips.get_rect(center=(500, 450))
+            )
+
+            pygame.draw.rect(screen, (40, 120, 80), reset_button)
+
+            reset_text = card_font.render(
+                "Reset Chips",
+                True,
+                (255, 255, 255)
+            )
+            screen.blit(
+                reset_text,
+                reset_text.get_rect(center=reset_button.center)
+            )
+
     elif gamestate == "blackjack":
+        balance_text = card_font.render(
+            f"Chips: {balance}",
+            True,
+            (255, 215, 0)
+        )
+        screen.blit(balance_text, (750, 30))
+
+        bet_text = card_font.render(
+            f"Bet: {current_bet}",
+            True,
+            (255, 215, 0)
+        )
+        screen.blit(bet_text, (750, 70))
+
         dealer_title = card_font.render(
             "Dealer's Hand", True, (255, 255, 255)
         )
@@ -119,7 +239,6 @@ while running:
                 True,
                 (255, 255, 255)
             )
-
             screen.blit(card_text, (100, 150 + i * 35))
 
         player_title = card_font.render(
@@ -135,7 +254,6 @@ while running:
                 True,
                 (255, 255, 255)
             )
-
             screen.blit(card_text, (100, 450 + i * 35))
 
         hand_value = get_hand_value(player_hand)
@@ -185,7 +303,6 @@ while running:
                 True,
                 (255, 215, 0)
             )
-
             screen.blit(
                 result_text,
                 result_text.get_rect(center=(500, 350))
@@ -211,10 +328,19 @@ while running:
                 True,
                 (255, 255, 255)
             )
-
             screen.blit(
                 play_again_text,
                 play_again_text.get_rect(center=play_again_button.center)
+            )
+
+            payout_text = card_font.render(
+                payout_message,
+                True,
+                (255, 215, 0)
+            )
+            screen.blit(
+                payout_text,
+                payout_text.get_rect(center=(500, 490))
             )
 
     pygame.display.flip()
