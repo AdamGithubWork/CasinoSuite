@@ -46,8 +46,10 @@ while running:
             if not round_over:
                 if hit_button.collidepoint(event.pos):
                     hit(player_hand, blackjack_deck)
-
-                    if get_hand_value(player_hand) >= 21:
+                    if get_hand_value(player_hand) > 21:
+                        round_over = True
+                    elif get_hand_value(player_hand) == 21:
+                        dealer_turn(dealer_hand, blackjack_deck)
                         round_over = True
 
                 elif stand_button.collidepoint(event.pos):
