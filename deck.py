@@ -60,17 +60,29 @@ def dealer_turn(dealer_hand, deck):
     while get_hand_value(dealer_hand)<17:
         dealer_hand.append(deck.pop())
 def determine_winner(player_hand, dealer_hand):
-    if get_hand_value(player_hand)>21:
+    player_blackjack = is_blackjack(player_hand)
+    dealer_blackjack = is_blackjack(dealer_hand)
+
+    if player_blackjack and not dealer_blackjack:
+        return "player"
+    elif dealer_blackjack and not player_blackjack:
         return "dealer"
-    elif get_hand_value(dealer_hand)>21:
+
+    player_value = get_hand_value(player_hand)
+    dealer_value = get_hand_value(dealer_hand)
+
+    if player_value > 21:
+        return "dealer"
+    elif dealer_value > 21:
         return "player"
-    elif get_hand_value(player_hand) > get_hand_value(dealer_hand):
+    elif player_value > dealer_value:
         return "player"
-    elif get_hand_value(player_hand) < get_hand_value(dealer_hand):
-        return "dealer"    
+    elif player_value < dealer_value:
+        return "dealer"
     else:
         return "push"
-    
+def is_blackjack(hand):
+    return len(hand) == 2 and get_hand_value(hand) == 21    
 # Test the shuffled deck
 if __name__ == "__main__":
     player_hand = []
